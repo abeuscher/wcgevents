@@ -56,6 +56,7 @@ export const handler = async (event) => {
     pageSize: FETCH_SIZE,
     currentPage: 1,
     publishedEvent: true,
+    archived: false,
   });
 
   if (startDate) {
@@ -71,7 +72,7 @@ export const handler = async (event) => {
       method: "GET",
       headers: {
         Authorization: `Basic ${auth}`,
-        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     });
 
