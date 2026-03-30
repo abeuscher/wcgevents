@@ -55,6 +55,7 @@ export const handler = async (event) => {
   const neonParams = new URLSearchParams({
     pageSize: FETCH_SIZE,
     currentPage: 1,
+    publishedEvent: true,
   });
 
   if (startDate) {
@@ -84,8 +85,11 @@ export const handler = async (event) => {
     }
 
     neonData = await response.json();
-    console.log("Neon response keys:", Object.keys(neonData));
     console.log("Neon request URL:", `${NEON_API_BASE}/events?${neonParams.toString()}`);
+    console.log("Neon response keys:", Object.keys(neonData));
+    console.log("Neon pagination:", JSON.stringify(neonData.pagination));
+    console.log("Neon events type:", typeof neonData.events, "length:", Array.isArray(neonData.events) ? neonData.events.length : "N/A");
+    console.log("Neon raw first 500 chars:", JSON.stringify(neonData).substring(0, 500));
   } catch (err) {
     return {
       statusCode: 502,
