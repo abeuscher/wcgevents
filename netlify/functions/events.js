@@ -50,10 +50,12 @@ export const handler = async (event) => {
 
   const auth = Buffer.from(`${orgId}:${apiKey}`).toString("base64");
 
-  // Bare minimum request — discover actual field names from response
+  // Minimal search — use field names from GET /events schema
   const searchBody = {
-    searchFields: [],
-    outputFields: [],
+    searchFields: [
+      { field: "name", operator: "NOT_BLANK", value: "" },
+    ],
+    outputFields: ["id", "name"],
     pagination: {
       currentPage: 0,
       pageSize: 5,
