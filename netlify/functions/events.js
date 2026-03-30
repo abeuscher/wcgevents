@@ -84,6 +84,7 @@ export const handler = async (event) => {
     }
 
     neonData = await response.json();
+    console.log("Neon raw response:", JSON.stringify(neonData));
   } catch (err) {
     return {
       statusCode: 502,
