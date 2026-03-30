@@ -50,35 +50,13 @@ export const handler = async (event) => {
 
   const auth = Buffer.from(`${orgId}:${apiKey}`).toString("base64");
 
-  // Build POST /events/search request body
-  const searchFields = [
-    { field: "publishEvent", operator: "EQUAL", value: "true" },
-    { field: "archived", operator: "EQUAL", value: "false" },
-  ];
-
-  if (startDate) {
-    searchFields.push({
-      field: "startDate",
-      operator: "GREATER_AND_EQUAL",
-      value: startDate,
-    });
-  }
-
+  // Bare minimum request — discover actual field names from response
   const searchBody = {
-    searchFields,
-    outputFields: [
-      "Event Name", "Event ID", "Event Description",
-      "Event Start Date", "Event Start Time", "Event End Date", "Event End Time",
-      "Event Category Name",
-      "Event Address Line 1", "Event City", "Event Zip Code",
-      "Event Thumbnail URL", "Event Capacity", "Event Code",
-      "Publish Event",
-    ],
+    searchFields: [],
+    outputFields: [],
     pagination: {
       currentPage: 0,
-      pageSize: FETCH_SIZE,
-      sortColumn: "startDate",
-      sortDirection: "ASC",
+      pageSize: 5,
     },
   };
 
@@ -108,7 +86,7 @@ export const handler = async (event) => {
     console.log("Neon search response keys:", Object.keys(neonData));
     console.log("Neon search pagination:", JSON.stringify(neonData.pagination));
     console.log("Neon search results count:", neonData.searchResults?.length ?? "N/A");
-    console.log("Neon search raw first 1000 chars:", JSON.stringify(neonData).substring(0, 1000));
+    console.log("Neon search raw first 2000 chars:", JSON.stringify(neonData).substring(0, 2000));
   } catch (err) {
     return {
       statusCode: 502,
