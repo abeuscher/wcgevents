@@ -72,7 +72,6 @@ export const handler = async (event) => {
       method: "GET",
       headers: {
         Authorization: `Basic ${auth}`,
-        Accept: "application/json",
       },
     });
 
