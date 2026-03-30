@@ -192,6 +192,7 @@
         throw new Error(`Request failed: ${response.status}`);
       }
       const data = await response.json();
+      console.log("Neon raw response:", JSON.stringify(data));
       render(container, data.events || []);
     } catch (err) {
       console.error("events-widget error:", err);
