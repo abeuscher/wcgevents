@@ -1,0 +1,10 @@
+/node_modules
+/public/build
+.env
+.env.backup
+.env.production
+.DS_Store
+auth.json
+npm-debug.log
+yarn-error.log
+*.log
