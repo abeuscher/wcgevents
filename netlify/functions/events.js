@@ -2,8 +2,6 @@
  * Neon CRM Events Proxy
  * Netlify Function — netlify/functions/events.js
  *
- * Uses POST /events/search (GET /events only returns pagination, not data).
- *
  * Required environment variables:
  *   NEON_ORG_ID   — your Neon CRM organization ID
  *   NEON_API_KEY  — your Neon CRM API key (v2)
@@ -48,35 +46,31 @@ export const handler = async (event) => {
   const startDate = params.startDate || null;
   const limit = Math.min(parseInt(params.limit, 10) || 20, 100);
 
-  const auth = Buffer.from(`${orgId}:${apiKey}`).toString("base64");
+  // Build Neon API request — simple GET /events
+  const neonParams = new URLSearchParams({
+    pageSize: FETCH_SIZE,
+    currentPage: 1,
+    publishedEvent: true,
+  });
 
-  // Minimal search — use field names from GET /events schema
-  const searchBody = {
-    searchFields: [
-      { field: "name", operator: "NOT_BLANK", value: "" },
-    ],
-    outputFields: ["id", "name"],
-    pagination: {
-      currentPage: 0,
-      pageSize: 5,
-    },
-  };
+  if (startDate) {
+    neonParams.set("startDateAfter", startDate);
+  }
+
+  const auth = Buffer.from(`${orgId}:${apiKey}`).toString("base64");
 
   let neonData;
 
   try {
-    const response = await fetch(`${NEON_API_BASE}/events/search`, {
-      method: "POST",
+    const response = await fetch(`${NEON_API_BASE}/events?${neonParams.toString()}`, {
+      method: "GET",
       headers: {
         Authorization: `Basic ${auth}`,
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify(searchBody),
     });
 
     if (!response.ok) {
       const detail = await response.text();
-      console.log("Neon search error:", response.status, detail);
       return {
         statusCode: response.status,
         headers: CORS_HEADERS,
@@ -85,10 +79,11 @@ export const handler = async (event) => {
     }
 
     neonData = await response.json();
-    console.log("Neon search response keys:", Object.keys(neonData));
-    console.log("Neon search pagination:", JSON.stringify(neonData.pagination));
-    console.log("Neon search results count:", neonData.searchResults?.length ?? "N/A");
-    console.log("Neon search raw first 2000 chars:", JSON.stringify(neonData).substring(0, 2000));
+    console.log("Neon request URL:", `${NEON_API_BASE}/events?${neonParams.toString()}`);
+    console.log("Neon response keys:", Object.keys(neonData));
+    console.log("Neon pagination:", JSON.stringify(neonData.pagination));
+    console.log("Neon events count:", Array.isArray(neonData.events) ? neonData.events.length : "not an array");
+    console.log("Neon raw first 2000 chars:", JSON.stringify(neonData).substring(0, 2000));
   } catch (err) {
     return {
       statusCode: 502,
@@ -97,18 +92,12 @@ export const handler = async (event) => {
     };
   }
 
-  let events = (neonData.searchResults || []).map((result) => {
-    // Search results use dynamic keys — log first result to see actual field names
-    // This mapping will be adjusted once we see real data
-    return result;
-  });
+  let events = neonData.events || [];
 
-  // Filter by tags if provided (field name TBD — will adjust after seeing response)
+  // Filter by tags if provided
   if (tags.length > 0) {
     events = events.filter((ev) => {
-      const categoryName = (
-        ev["Event Category Name"] || ev.categoryName || ev.category?.name || ""
-      ).toLowerCase();
+      const categoryName = (ev.category?.name || ev.categoryName || "").toLowerCase();
       return tags.some((tag) => categoryName.includes(tag));
     });
   }
